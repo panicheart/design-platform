@@ -1,17 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/User';
+import User, { IUser } from '../models/User';
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: string;
+  };
 }
 
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
+export const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -19,16 +17,19 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
       throw new Error();
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key') as { userId: string };
-    const user = await User.findById(decoded.userId);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { id: string; role: string };
+    const user = await User.findById(decoded.id) as IUser;
 
     if (!user) {
       throw new Error();
     }
 
-    req.user = user;
+    req.user = {
+      id: user._id.toString(),
+      role: user.role
+    };
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Please authenticate' });
+    res.status(401).send({ error: 'Please authenticate.' });
   }
 }; 

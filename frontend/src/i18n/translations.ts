@@ -79,7 +79,23 @@ export const translations = {
     teamMembers: 'Team Members',
     activeTeamMembers: 'Active team members',
     projects: 'Projects',
-    ongoingProjects: 'Ongoing projects'
+    ongoingProjects: 'Ongoing projects',
+
+    // New keys
+    uploadResource: 'Upload Resource',
+    chooseFile: 'Choose File',
+    image: 'Image',
+    other: 'Other',
+    uploading: 'Uploading...',
+    upload: 'Upload',
+    download: 'Download',
+    searchResources: 'Search resources',
+    confirmDelete: 'Are you sure you want to delete?',
+    title: 'Title',
+    description: 'Description',
+    quickStats: 'Quick Stats',
+    upcomingTasks: 'Upcoming Tasks',
+    recentActivities: 'Recent Activities',
   },
   zh: {
     // Navigation
@@ -161,6 +177,22 @@ export const translations = {
     teamMembers: '团队成员',
     activeTeamMembers: '活跃团队成员',
     projects: '项目',
-    ongoingProjects: '进行中的项目'
+    ongoingProjects: '进行中的项目',
+
+    // New keys
+    uploadResource: '上传资源',
+    chooseFile: '选择文件',
+    image: '图片',
+    other: '其他',
+    uploading: '正在上传...',
+    upload: '上传',
+    download: '下载',
+    searchResources: '搜索资源',
+    confirmDelete: '确定要删除吗？',
+    title: '标题',
+    description: '描述',
+    quickStats: '统计信息',
+    upcomingTasks: '即将到来的任务',
+    recentActivities: '最近活动',
   }
 }; 

@@ -1,109 +1,149 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Link,
-  Paper,
   Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
   Alert,
+  Divider,
 } from '@mui/material';
-import { authAPI } from '../../services/api';
-import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+import { useAppDispatch } from '../../store';
+import { login } from '../../store/slices/authSlice';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const [formData, setFormData] = useState({
+    email: 'admin@example.com',
+    password: 'admin123',
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    dispatch(loginStart());
 
     try {
-      const response = await authAPI.login({ email, password });
-      dispatch(loginSuccess(response.data));
-      navigate('/');
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed';
-      dispatch(loginFailure(errorMessage));
-      setError(errorMessage);
+      await dispatch(login(formData)).unwrap();
+      navigate('/dashboard');
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Login failed');
+      }
     }
   };
 
+  const handleDebugLogin = () => {
+    const mockUser = {
+      id: '1',
+      username: 'admin',
+      email: 'admin@example.com',
+      role: 'admin',
+      department: 'IT',
+      position: 'System Administrator',
+    };
+    const mockToken = 'debug-token';
+    localStorage.setItem('token', mockToken);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    dispatch(
+      login.fulfilled(
+        { user: mockUser, token: mockToken },
+        '', // requestId
+        { email: mockUser.email, password: '' }
+      )
+    );
+    navigate('/dashboard');
+  };
+
   return (
-    <Container component="main" maxWidth="xs">
+    <Container maxWidth="sm">
       <Box
         sx={{
-          marginTop: 8,
+          minHeight: '100vh',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <Typography component="h1" variant="h5">
-            Sign in
+        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+          <Typography variant="h4" component="h1" align="center" gutterBottom>
+            Login
           </Typography>
+          
           {error && (
-            <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
+            <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              开发环境默认账号：
+              <br />
+              邮箱：admin@example.com
+              <br />
+              密码：admin123
+            </Typography>
+          </Alert>
+
+          <Divider sx={{ my: 2 }} />
+
+          <form onSubmit={handleSubmit}>
             <TextField
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
               margin="normal"
               required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
             />
             <TextField
+              fullWidth
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
               margin="normal"
               required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              color="primary"
+              size="large"
+              sx={{ mt: 3 }}
             >
-              Sign In
+              Login
             </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <Link component={RouterLink} to="/register" variant="body2">
-                {"Don't have an account? Sign Up"}
-              </Link>
-            </Box>
-          </Box>
+          </form>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Button
+            fullWidth
+            variant="outlined"
+            color="secondary"
+            onClick={handleDebugLogin}
+            sx={{ mt: 2 }}
+          >
+            调试/跳过登录
+          </Button>
         </Paper>
       </Box>
     </Container>

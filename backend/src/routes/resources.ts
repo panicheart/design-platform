@@ -1,97 +1,117 @@
 import express from 'express';
-import Resource from '../models/Resource';
-import { auth } from '../middleware/auth';
+import { Request, Response } from 'express';
+import { validateResource } from '../middleware/validation';
+import { connectDB } from '../config/database';
+import logger from '../utils/logger';
+
+interface IResource {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  category: string;
+  status: string;
+  filePath: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: string;
+  department: string;
+  tags: string[];
+  version: number;
+  metadata: Record<string, any>;
+  accessControl: {
+    visibility: string;
+    allowedUsers: string[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface IDatabase {
+  resources: IResource[];
+}
 
 const router = express.Router();
 
-// Get all resources
-router.get('/', async (req, res) => {
+// 获取所有资源
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const { type, status, visibility } = req.query;
-    const query: any = {};
-
-    if (type) query.type = type;
-    if (status) query.status = status;
-    if (visibility) query.visibility = visibility;
-
-    const resources = await Resource.find(query)
-      .populate('createdBy', 'username email')
-      .populate('updatedBy', 'username email');
-
+    const db = await connectDB() as unknown as IDatabase;
+    const resources = db.resources;
     res.json(resources);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching resources', error });
+    logger.error('Error fetching resources:', error);
+    res.status(500).json({ message: 'Error fetching resources' });
   }
 });
 
-// Get single resource
-router.get('/:id', async (req, res) => {
+// 获取单个资源
+router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const resource = await Resource.findById(req.params.id)
-      .populate('createdBy', 'username email')
-      .populate('updatedBy', 'username email');
-
+    const db = await connectDB() as unknown as IDatabase;
+    const resource = db.resources.find((r: IResource) => r.id === req.params.id);
     if (!resource) {
       return res.status(404).json({ message: 'Resource not found' });
     }
-
     res.json(resource);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching resource', error });
+    logger.error('Error fetching resource:', error);
+    res.status(500).json({ message: 'Error fetching resource' });
   }
 });
 
-// Create new resource
-router.post('/', auth, async (req, res) => {
+// 创建资源
+router.post('/', validateResource, async (req: Request, res: Response) => {
   try {
-    const resource = new Resource({
+    const db = await connectDB() as unknown as IDatabase;
+    const newResource: IResource = {
+      id: Date.now().toString(),
       ...req.body,
-      createdBy: req.user._id,
-      updatedBy: req.user._id
-    });
-
-    await resource.save();
-    res.status(201).json(resource);
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    db.resources.push(newResource);
+    res.status(201).json(newResource);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating resource', error });
+    logger.error('Error creating resource:', error);
+    res.status(500).json({ message: 'Error creating resource' });
   }
 });
 
-// Update resource
-router.put('/:id', auth, async (req, res) => {
+// 更新资源
+router.put('/:id', validateResource, async (req: Request, res: Response) => {
   try {
-    const resource = await Resource.findById(req.params.id);
-
-    if (!resource) {
+    const db = await connectDB() as unknown as IDatabase;
+    const index = db.resources.findIndex((r: IResource) => r.id === req.params.id);
+    if (index === -1) {
       return res.status(404).json({ message: 'Resource not found' });
     }
-
-    // Update fields
-    Object.assign(resource, {
+    const updatedResource: IResource = {
+      ...db.resources[index],
       ...req.body,
-      updatedBy: req.user._id
-    });
-
-    await resource.save();
-    res.json(resource);
+      updatedAt: new Date()
+    };
+    db.resources[index] = updatedResource;
+    res.json(updatedResource);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating resource', error });
+    logger.error('Error updating resource:', error);
+    res.status(500).json({ message: 'Error updating resource' });
   }
 });
 
-// Delete resource
-router.delete('/:id', auth, async (req, res) => {
+// 删除资源
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const resource = await Resource.findById(req.params.id);
-
-    if (!resource) {
+    const db = await connectDB() as unknown as IDatabase;
+    const index = db.resources.findIndex((r: IResource) => r.id === req.params.id);
+    if (index === -1) {
       return res.status(404).json({ message: 'Resource not found' });
     }
-
-    await Resource.deleteOne({ _id: req.params.id });
-    res.json({ message: 'Resource deleted successfully' });
+    db.resources.splice(index, 1);
+    res.status(204).send();
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting resource', error });
+    logger.error('Error deleting resource:', error);
+    res.status(500).json({ message: 'Error deleting resource' });
   }
 });
 

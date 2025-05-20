@@ -1,131 +1,120 @@
 import express from 'express';
-import Task from '../models/Task';
-import { auth } from '../middleware/auth';
+import { Request, Response } from 'express';
+import { connectDB } from '../config/database';
+import logger from '../utils/logger';
+
+interface ITask {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  priority: string;
+  assignedTo: string;
+  createdBy: string;
+  department: string;
+  startDate: Date;
+  dueDate: Date;
+  estimatedHours: number;
+  actualHours: number;
+  dependencies: string[];
+  attachments: string[];
+  milestones: {
+    title: string;
+    dueDate: Date;
+    completed: boolean;
+  }[];
+  tags: string[];
+  progress: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface IDatabase {
+  tasks: ITask[];
+}
 
 const router = express.Router();
 
-// Get all tasks
-router.get('/', auth, async (req, res) => {
+// 获取所有任务
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const { type, status, assignedTo } = req.query;
-    const query: any = {};
-
-    if (type) query.type = type;
-    if (status) query.status = status;
-    if (assignedTo) query.assignedTo = assignedTo;
-
-    const tasks = await Task.find(query)
-      .populate('assignedTo', 'username email')
-      .populate('createdBy', 'username email');
-
+    const db = await connectDB() as unknown as IDatabase;
+    const tasks = db.tasks;
     res.json(tasks);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching tasks', error });
+    logger.error('Error fetching tasks:', error);
+    res.status(500).json({ message: 'Error fetching tasks' });
   }
 });
 
-// Get single task
-router.get('/:id', auth, async (req, res) => {
+// 获取单个任务
+router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const task = await Task.findById(req.params.id)
-      .populate('assignedTo', 'username email')
-      .populate('createdBy', 'username email');
-
+    const db = await connectDB() as unknown as IDatabase;
+    const task = db.tasks.find((t: ITask) => t.id === req.params.id);
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-
     res.json(task);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching task', error });
+    logger.error('Error fetching task:', error);
+    res.status(500).json({ message: 'Error fetching task' });
   }
 });
 
-// Create new task
-router.post('/', auth, async (req, res) => {
+// 创建任务
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const task = new Task({
+    const db = await connectDB() as unknown as IDatabase;
+    const newTask: ITask = {
+      id: Date.now().toString(),
       ...req.body,
-      createdBy: req.user._id
-    });
-
-    await task.save();
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating task', error });
-  }
-});
-
-// Update task
-router.put('/:id', auth, async (req, res) => {
-  try {
-    const task = await Task.findById(req.params.id);
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    // Update fields
-    Object.assign(task, req.body);
-    await task.save();
-    res.json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating task', error });
-  }
-});
-
-// Delete task
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    const task = await Task.findById(req.params.id);
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    await Task.deleteOne({ _id: req.params.id });
-    res.json({ message: 'Task deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting task', error });
-  }
-});
-
-// Add comment to task
-router.post('/:id/comments', auth, async (req, res) => {
-  try {
-    const task = await Task.findById(req.params.id);
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    task.comments.push({
-      content: req.body.content,
-      author: req.user._id,
       createdAt: new Date(),
-    });
-
-    await task.save();
-    res.json(task);
+      updatedAt: new Date()
+    };
+    db.tasks.push(newTask);
+    res.status(201).json(newTask);
   } catch (error) {
-    res.status(500).json({ message: 'Error adding comment', error });
+    logger.error('Error creating task:', error);
+    res.status(500).json({ message: 'Error creating task' });
   }
 });
 
-// Update task progress
-router.patch('/:id/progress', auth, async (req, res) => {
+// 更新任务
+router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const task = await Task.findById(req.params.id);
-
-    if (!task) {
+    const db = await connectDB() as unknown as IDatabase;
+    const index = db.tasks.findIndex((t: ITask) => t.id === req.params.id);
+    if (index === -1) {
       return res.status(404).json({ message: 'Task not found' });
     }
-
-    task.progress = req.body.progress;
-    await task.save();
-    res.json(task);
+    const updatedTask: ITask = {
+      ...db.tasks[index],
+      ...req.body,
+      updatedAt: new Date()
+    };
+    db.tasks[index] = updatedTask;
+    res.json(updatedTask);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating progress', error });
+    logger.error('Error updating task:', error);
+    res.status(500).json({ message: 'Error updating task' });
+  }
+});
+
+// 删除任务
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const db = await connectDB() as unknown as IDatabase;
+    const index = db.tasks.findIndex((t: ITask) => t.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    db.tasks.splice(index, 1);
+    res.status(204).send();
+  } catch (error) {
+    logger.error('Error deleting task:', error);
+    res.status(500).json({ message: 'Error deleting task' });
   }
 });
 

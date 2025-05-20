@@ -224,11 +224,8 @@ const ResourceLibrary: React.FC = () => {
         ))}
       </Box>
 
-      <ResourceUpload
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        onUpload={handleUpload}
-      />
+      {/* <ResourceUpload open={uploadDialogOpen} onClose={() => setUploadDialogOpen(false)} onUpload={handleUpload} /> */}
+      <ResourceUpload />
     </Box>
   );
 };

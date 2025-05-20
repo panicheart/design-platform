@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../store';
 import {
   Box,
   Button,
@@ -12,10 +12,19 @@ import {
   Alert,
 } from '@mui/material';
 import { authAPI } from '../../services/api';
-import { loginSuccess } from '../../store/slices/authSlice';
+import { register } from '../../store/slices/authSlice';
+
+interface RegisterFormData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  department: string;
+  position: string;
+}
 
 const Register: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterFormData>({
     username: '',
     email: '',
     password: '',
@@ -25,7 +34,7 @@ const Register: React.FC = () => {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,7 +44,7 @@ const Register: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -45,13 +54,16 @@ const Register: React.FC = () => {
     }
 
     try {
-      const { confirmPassword, ...registerData } = formData;
-      const response = await authAPI.register(registerData);
-      dispatch(loginSuccess(response.data));
+      await dispatch(register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        department: formData.department,
+      }));
       navigate('/');
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Registration failed';
-      setError(errorMessage);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      setError('Registration failed. Please try again.');
     }
   };
 
@@ -130,6 +142,7 @@ const Register: React.FC = () => {
                   label="Confirm Password"
                   type="password"
                   id="confirmPassword"
+                  autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />

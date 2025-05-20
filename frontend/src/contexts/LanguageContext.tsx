@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { translations } from '../i18n/translations';
 
 type Language = 'en' | 'zh';
@@ -9,20 +9,28 @@ interface LanguageContextType {
   t: (key: string) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType>({
+  language: 'en',
+  setLanguage: () => {
+    // 默认实现，实际使用时会被 Provider 覆盖
+    console.warn('setLanguage called before Provider initialization');
+  },
+  t: () => '',
+});
 
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
 
-  const t = (key: string) => {
-    const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      value = value?.[k];
+  const t = (key: string): string => {
+    const value = translations[language][key as keyof typeof translations[typeof language]];
+    if (typeof value === 'string') {
+      return value;
     }
-    
-    return value || key;
+    return key;
   };
 
   return (
@@ -32,10 +40,4 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-}; 
+export const useLanguage = () => useContext(LanguageContext); 

@@ -1,4 +1,8 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+
+import { taskAPI } from '../../services/api';
+import type { Task } from '../../services/api';
 
 interface Comment {
   id: string;
@@ -9,19 +13,6 @@ interface Comment {
   };
   content: string;
   timestamp: string;
-}
-
-interface Task {
-  _id: string;
-  id: string;
-  title: string;
-  type: 'bug' | 'feature' | 'task';
-  status: 'completed' | 'in-progress' | 'pending';
-  startDate: string;
-  endDate: string;
-  progress?: number;
-  description?: string;
-  comments?: Comment[];
 }
 
 interface TaskState {
@@ -38,22 +29,32 @@ const initialState: TaskState = {
   error: null,
 };
 
+export const fetchTasksStart = createAsyncThunk(
+  'tasks/fetchStart',
+  async () => {
+    const response = await taskAPI.getTasks();
+    return response.data.data;
+  }
+);
+
+export const fetchTasksSuccess = createAsyncThunk(
+  'tasks/fetchSuccess',
+  async (tasks: Task[]) => {
+    return tasks;
+  }
+);
+
+export const fetchTasksFailure = createAsyncThunk(
+  'tasks/fetchFailure',
+  async (error: string) => {
+    return error;
+  }
+);
+
 const taskSlice = createSlice({
   name: 'tasks',
   initialState,
   reducers: {
-    fetchTasksStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    fetchTasksSuccess: (state, action: PayloadAction<Task[]>) => {
-      state.loading = false;
-      state.tasks = action.payload;
-    },
-    fetchTasksFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
-    },
     setTasks: (state, action: PayloadAction<Task[]>) => {
       state.tasks = action.payload;
     },
@@ -61,13 +62,13 @@ const taskSlice = createSlice({
       state.tasks.push(action.payload);
     },
     updateTask: (state, action: PayloadAction<Task>) => {
-      const index = state.tasks.findIndex(t => t.id === action.payload.id);
+      const index = state.tasks.findIndex(task => task.id === action.payload.id);
       if (index !== -1) {
         state.tasks[index] = action.payload;
       }
     },
     deleteTask: (state, action: PayloadAction<string>) => {
-      state.tasks = state.tasks.filter(t => t.id !== action.payload);
+      state.tasks = state.tasks.filter(task => task.id !== action.payload);
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
@@ -99,12 +100,30 @@ const taskSlice = createSlice({
       }
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTasksStart.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTasksStart.fulfilled, (state, action) => {
+        state.loading = false;
+        state.tasks = action.payload;
+      })
+      .addCase(fetchTasksStart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch tasks';
+      })
+      .addCase(fetchTasksSuccess.fulfilled, (state, action) => {
+        state.tasks = action.payload;
+      })
+      .addCase(fetchTasksFailure.fulfilled, (state, action) => {
+        state.error = action.payload;
+      });
+  },
 });
 
 export const {
-  fetchTasksStart,
-  fetchTasksSuccess,
-  fetchTasksFailure,
   setTasks,
   addTask,
   updateTask,
