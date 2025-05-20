@@ -89,7 +89,7 @@ design-platform/
 - [ ] 团队协作模块
 
 ## 已知问题
-详见 [ISSUES.md](./ISSUES.md)
+详见 [ISSUES_SUMMARY.md](./docs/ISSUES_SUMMARY.md)
 
 ## 贡献指南
 1. Fork 项目
