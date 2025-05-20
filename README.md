@@ -1,122 +1,102 @@
-# Department Platform
+# 设计平台项目
 
-A comprehensive web-based platform for department management, resource sharing, and development tracking.
+## 项目简介
+这是一个基于 React + TypeScript + Node.js 的现代化设计平台，提供资源管理、任务跟踪、团队协作等功能。
 
-## Features
+## 技术栈
+- 前端：React + TypeScript + Material-UI + Redux Toolkit
+- 后端：Node.js + Express + TypeScript
+- 数据库：MongoDB（开发环境使用内存数据库）
 
-### Resource Library (资源库)
-- Human Resources Management
-- Time Tracking
-- Material Management
-- Component Library
-- Product Catalog
-- Knowledge Base
+## 开发环境要求
+- Node.js >= 14
+- npm >= 6
+- MongoDB >= 4.4（可选，开发环境使用内存数据库）
 
-### Development Platform (研发平台)
-- Task Overview
-- Requirements Management
-- Project Planning
-- Workbench
-- Issue Tracking
+## 快速开始
 
-## Tech Stack
-
-### Backend
-- Node.js
-- Express
-- TypeScript
-- MongoDB
-- JWT Authentication
-
-### Frontend
-- React
-- TypeScript
-- Material-UI
-- Redux Toolkit
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
+### 1. 克隆项目
 ```bash
-git clone [repository-url]
-cd department-platform
+git clone [项目地址]
+cd design-platform
 ```
 
-2. Install backend dependencies:
+### 2. 安装依赖
 ```bash
+# 安装后端依赖
 cd backend
 npm install
-```
 
-3. Install frontend dependencies:
-```bash
+# 安装前端依赖
 cd ../frontend
 npm install
 ```
 
-4. Create a `.env` file in the backend directory with the following variables:
-```
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/department-platform
-JWT_SECRET=your-super-secret-jwt-key
-NODE_ENV=development
-```
-
-### Running the Application
-
-1. Start the backend server:
+### 3. 启动开发服务器
 ```bash
-cd backend
+# 启动后端服务（在 backend 目录下）
 npm run dev
-```
 
-2. Start the frontend development server:
-```bash
-cd frontend
+# 启动前端服务（在 frontend 目录下）
 npm start
 ```
 
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+### 4. 访问应用
+- 前端：http://localhost:3000
+- 后端：http://localhost:5001
 
-## API Documentation
+## 开发环境账号
+- 邮箱：admin@example.com
+- 密码：admin123
 
-### Authentication
-- POST /api/auth/register - Register new user
-- POST /api/auth/login - User login
+## 项目结构
+```
+design-platform/
+├── frontend/          # 前端项目
+│   ├── src/
+│   │   ├── components/    # 组件
+│   │   ├── pages/        # 页面
+│   │   ├── services/     # API 服务
+│   │   ├── store/        # Redux store
+│   │   └── types/        # TypeScript 类型定义
+│   └── package.json
+│
+├── backend/           # 后端项目
+│   ├── src/
+│   │   ├── controllers/  # 控制器
+│   │   ├── models/      # 数据模型
+│   │   ├── routes/      # 路由
+│   │   └── services/    # 业务逻辑
+│   └── package.json
+│
+├── README.md
+└── ISSUES.md
+```
 
-### Resources
-- GET /api/resources - Get all resources
-- GET /api/resources/:id - Get single resource
-- POST /api/resources - Create new resource
-- PUT /api/resources/:id - Update resource
-- DELETE /api/resources/:id - Delete resource
+## 功能特性
+- [x] 用户认证（登录/注册）
+- [x] 开发环境快速登录
+- [ ] 资源管理
+- [ ] 任务跟踪
+- [ ] 团队协作
+- [ ] 权限控制
 
-### Tasks
-- GET /api/tasks - Get all tasks
-- GET /api/tasks/:id - Get single task
-- POST /api/tasks - Create new task
-- PUT /api/tasks/:id - Update task
-- DELETE /api/tasks/:id - Delete task
-- POST /api/tasks/:id/comments - Add comment to task
-- PATCH /api/tasks/:id/progress - Update task progress
+## 开发进度
+- [x] 项目基础架构搭建
+- [x] 用户认证模块
+- [ ] 资源管理模块
+- [ ] 任务管理模块
+- [ ] 团队协作模块
 
-## Contributing
+## 已知问题
+详见 [ISSUES.md](./ISSUES.md)
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 贡献指南
+1. Fork 项目
+2. 创建特性分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+## 许可证
+MIT 
