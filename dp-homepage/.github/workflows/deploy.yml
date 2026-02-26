@@ -29,13 +29,13 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './dp-homepage/app/package-lock.json'
+          cache-dependency-path: './app/package-lock.json'
       
       - name: Install dependencies
-        run: cd dp-homepage/app && npm ci
+        run: cd app && npm ci
       
       - name: Build
-        run: cd dp-homepage/app && npm run build
+        run: cd app && npm run build
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dp-homepage/app/dist'
+          path: './app/dist'
       
       - name: Deploy to GitHub Pages
         id: deployment
